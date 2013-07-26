@@ -4,6 +4,14 @@
 import socket
 
 
+def int_to_net(ip):
+    ret = ""
+    for i in range(4):
+        ret = chr(int(ip & 0xff)) + ret
+        ip >>= 8
+    return ret
+
+
 class DNSQuery(object):
     def __init__(self, data):
         self.data = data
@@ -33,25 +41,24 @@ class DNSQuery(object):
             # Response type, ttl and resource data length -> 4 bytes
             packet += "\x00\x01\x00\x01\x00\x00\x00\x3c\x00\x04"
             # 4 bytes of IP
-            packet += str.join("", map(lambda x: chr(int(x)), ip.split(".")))
+            packet += int_to_net(ip)
         return packet
 
 
 def main():
-    ip = "192.168.1.1"
-    print "pyminifakeDNS:: dom.query. 60 IN A %s" % ip
-
     udps = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     udps.bind(("", 53))
 
     try:
+        ip = 0
         while 1:
             data, addr = udps.recvfrom(1024)
             p = DNSQuery(data)
             udps.sendto(p.response(ip), addr)
             print "Response: %s -> %s" % (p.domain, ip)
+            ip = (ip + 1) % 0xffffffff
     except KeyboardInterrupt:
-        print "Finalizando"
+        print "Exiting..."
         udps.close()
 
 if __name__ == "__main__":
