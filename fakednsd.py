@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # Sourced from http://code.activestate.com/recipes/491264-mini-fake-dns-server/
 
+from datetime import datetime
 import socket
 
 
@@ -55,7 +56,7 @@ def main():
             data, addr = udps.recvfrom(1024)
             p = DNSQuery(data)
             udps.sendto(p.response(ip), addr)
-            print "Response: %s -> %s" % (p.domain, ip)
+            print "[%s] %s -> %s; %s" % (datetime.now(), p.domain, ip, addr)
             ip = (ip + 1) % 0xffffffff
     except KeyboardInterrupt:
         print "Exiting..."
